@@ -5,7 +5,7 @@ import styles from './styles/card.module.css'
 
 const Card = ({value, suit}: CardProps) => {
     const getColor =() => {
-        if(suit=="spades" || suit=="clubs"){
+        if(suit==="♠" || suit==="♣"){
             return styles.black
         } else {
             return styles.red
