@@ -27,6 +27,11 @@ function App() {
   const [deck, setDeck]: any[] = useState(data);
 
   const [gameState, setGameState] = useState(GameState.bet);
+  const [buttonState, setButtonState] = useState({
+    hitDisabled: false,
+    standDisabled: false,
+    resetDisabled: false
+  });
 
   useEffect(() => {
     calculateScore(userCards, setUserCardScore);
@@ -41,29 +46,62 @@ function App() {
       getCard("user")
       getCard("user")
       getCard("dealer")
-      setGameState(GameState.bet)
+      getCard("hidden")
+      setGameState(GameState.userTurn)
+    }
+  })
+
+  useEffect(() => {
+    if(gameState == GameState.userTurn){
+      if(userCardScore > 21){
+        buttonState.hitDisabled = true;
+        buttonState.resetDisabled = false;
+        buttonState.standDisabled = true;
+        console.log("you lost")
+      }
+    }
+  })
+
+  useEffect(() => {
+    if(gameState == GameState.dealerTurn){
+      if(dealerCardScore <= 21 && dealerCardScore > userCardScore){
+        console.log("user lost")
+        buttonState.hitDisabled = true;
+        buttonState.resetDisabled = false;
+        buttonState.standDisabled = true;
+      }
+      else if (dealerCardScore < 17){
+        getCard("dealer");
+      } 
+      else if(dealerCardScore > 21){
+        console.log("user won")
+      }
+      buttonState.resetDisabled = false; 
     }
   })
 
   const calculateScore = (cards: any[], setScore: any) => {
     let total = 0;
     cards.forEach((card: any) => {
-      switch (card.value) {
-        case 'K':
-          total += 10;
-          break;
-        case 'Q':
-          total += 10;
-          break;
-        case 'J':
-          total += 10;
-          break;
-        case 'A': // Change this to be both 1 and another value
-          total += 1
-          break;
-        default:
-          total += Number(card.value);
-          break;
+      if(card.hidden == false){
+        switch (card.value) {
+          case 'K':
+            total += 10;
+            break;
+          case 'Q':
+            total += 10;
+            break;
+          case 'J':
+            total += 10;
+            break;
+          case 'A': // Change this to be both 1 and another value
+            total += 1
+            break;
+          default:
+            total += Number(card.value);
+            break;
+      }
+      
     }});
     setScore(total);
   }
@@ -76,7 +114,30 @@ function App() {
       dealerCards.push({'value':value, 'suit': suit, 'hidden':false})
       setDealerCards([...dealerCards]);
     }
+    else if (dealType == "hidden"){
+      dealerCards.push({'value':value, 'suit': suit, 'hidden':true})
+      setDealerCards([...dealerCards]);
+    }
       
+  }
+
+  const revealHidden = () => {
+    setGameState(GameState.dealerTurn)
+    buttonState.hitDisabled = true;
+    buttonState.standDisabled = true;
+    dealerCards.filter((card: any) => {
+      if(card.hidden == true){
+        card.hidden = false
+      }
+      return card
+    });
+    setDealerCards([...dealerCards])
+  }
+
+  const hit = () => {
+    if(gameState == GameState.userTurn){
+      getCard("user")
+    }
   }
 
   const getCard = (dealtype: string) => {
@@ -111,6 +172,9 @@ function App() {
     setDealerCards([]);
     setDealerCardScore(0);
     setGameState(GameState.init)
+    buttonState.hitDisabled = false;
+    buttonState.resetDisabled = true;
+    buttonState.standDisabled = false;
     console.log(userCardScore)
   }
 
@@ -118,13 +182,13 @@ function App() {
   return (
     <div className="App">
       <div>
-      <button onClick={()=>resetEnv()}>
+      <button onClick={()=>resetEnv()} disabled={buttonState.resetDisabled}>
           Reset
         </button>
-        <button onClick={()=>getCard("user")}>
+        <button onClick={()=>hit()} disabled={buttonState.hitDisabled}>
           Hit
         </button>
-        <button onClick={()=>getCard("dealer")}>
+        <button onClick={()=>revealHidden()} disabled={buttonState.standDisabled}>
           Stay
         </button>
 

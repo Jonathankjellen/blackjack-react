@@ -17,7 +17,7 @@ const Hand = ({title, cards}: HandProps) => {
         <div className={styles.cardContainer}>
             {cards.map((card: any, index: number) => {
                 return (
-                    <Card key={index} value={card.value} suit={card.suit} />
+                    <Card key={index} value={card.value} suit={card.suit} hidden={card.hidden}/>
             );
             })}
         </div>
