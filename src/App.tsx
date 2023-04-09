@@ -6,6 +6,14 @@ import Hand from './components/Hand';
 import jsonData from './deck.json';
 
 function App() {
+
+  enum GameState {
+    bet,
+    init,
+    userTurn,
+    dealerTurn
+  }
+
   const [clickedButton, setClickedButton] = useState('');
   const [betAmount, setBetAmount] = useState(0);
 
@@ -18,6 +26,8 @@ function App() {
   const data = JSON.parse(JSON.stringify(jsonData.cards));
   const [deck, setDeck]: any[] = useState(data);
 
+  const [gameState, setGameState] = useState(GameState.bet);
+
   useEffect(() => {
     calculateScore(userCards, setUserCardScore);
   }, [userCards]);
@@ -25,6 +35,15 @@ function App() {
   useEffect(() => {
     calculateScore(dealerCards, setDealerCardScore);
   }, [dealerCards]);
+
+  useEffect(() => {
+    if (gameState == GameState.init){
+      getCard("user")
+      getCard("user")
+      getCard("dealer")
+      setGameState(GameState.bet)
+    }
+  })
 
   const calculateScore = (cards: any[], setScore: any) => {
     let total = 0;
@@ -61,7 +80,6 @@ function App() {
   }
 
   const getCard = (dealtype: string) => {
-    console.log(deck)
     const randomIndex = Math.floor(Math.random() * deck.length);
     const card = deck[randomIndex];
     deck.splice(randomIndex, 1);
@@ -69,8 +87,6 @@ function App() {
     const newDeck = [...deck];
 
     setDeck(newDeck);
-
-    console.log(deck)
     switch (card.suit) {
       case 'spades':
         setCards(dealtype, card.value, '♠' );
@@ -88,15 +104,28 @@ function App() {
         break;
     }
   }
+  const resetEnv = () => {
+    setDeck(data);
+    setUserCards([]);
+    setUserCardScore(0);
+    setDealerCards([]);
+    setDealerCardScore(0);
+    setGameState(GameState.init)
+    console.log(userCardScore)
+  }
+
   
   return (
     <div className="App">
       <div>
+      <button onClick={()=>resetEnv()}>
+          Reset
+        </button>
         <button onClick={()=>getCard("user")}>
-          Activate Lasers
+          Hit
         </button>
         <button onClick={()=>getCard("dealer")}>
-          Activate Lasers
+          Stay
         </button>
 
       </div>
