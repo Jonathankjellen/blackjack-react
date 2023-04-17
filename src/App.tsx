@@ -11,7 +11,8 @@ function App() {
     bet,
     init,
     userTurn,
-    dealerTurn
+    dealerTurn,
+    bust
   }
 
   const [clickedButton, setClickedButton] = useState('');
@@ -47,6 +48,7 @@ function App() {
       getCard("user")
       getCard("dealer")
       getCard("hidden")
+      console.log("init")
       setGameState(GameState.userTurn)
     }
   })
@@ -54,9 +56,7 @@ function App() {
   useEffect(() => {
     if(gameState == GameState.userTurn){
       if(userCardScore > 21){
-        buttonState.hitDisabled = true;
-        buttonState.resetDisabled = false;
-        buttonState.standDisabled = true;
+        bust()
         console.log("you lost")
       }
     }
@@ -69,12 +69,14 @@ function App() {
         buttonState.hitDisabled = true;
         buttonState.resetDisabled = false;
         buttonState.standDisabled = true;
+        setButtonState({ ...buttonState });
       }
       else if (dealerCardScore < 17){
         getCard("dealer");
       } 
       else if(dealerCardScore > 21){
         console.log("user won")
+        setGameState(GameState.bust)
       }
       buttonState.resetDisabled = false; 
     }
@@ -121,10 +123,19 @@ function App() {
       
   }
 
+  const bust = () => {
+    buttonState.hitDisabled = true;
+    buttonState.standDisabled = true;
+    buttonState.resetDisabled = false;
+    setButtonState({ ...buttonState });
+    setGameState(GameState.bust)
+  }
+
   const revealHidden = () => {
     setGameState(GameState.dealerTurn)
     buttonState.hitDisabled = true;
     buttonState.standDisabled = true;
+    setButtonState({ ...buttonState });
     dealerCards.filter((card: any) => {
       if(card.hidden == true){
         card.hidden = false
@@ -137,6 +148,7 @@ function App() {
   const hit = () => {
     if(gameState == GameState.userTurn){
       getCard("user")
+
     }
   }
 
@@ -171,10 +183,13 @@ function App() {
     setUserCardScore(0);
     setDealerCards([]);
     setDealerCardScore(0);
-    setGameState(GameState.init)
+
     buttonState.hitDisabled = false;
     buttonState.resetDisabled = true;
     buttonState.standDisabled = false;
+    setButtonState({ ...buttonState });
+    setGameState(GameState.init)
+    
     console.log(userCardScore)
   }
 
