@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import Card from "./components/Card";
 import Hand from './components/Hand';
+import Controller from './components/Controller';
 import jsonData from './deck.json';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
 
   const [clickedButton, setClickedButton] = useState('');
   const [betAmount, setBetAmount] = useState(0);
+  const [balance, setBalance] = useState(0);
 
   const [userCards, setUserCards]: any[] = useState([]);
   const [userCardScore, setUserCardScore] = useState(0);
@@ -151,6 +153,9 @@ function App() {
 
     }
   }
+  const placeBet = (amount: number) => {
+    setBetAmount(amount);
+  }
 
   const getCard = (dealtype: string) => {
     const randomIndex = Math.floor(Math.random() * deck.length);
@@ -197,6 +202,9 @@ function App() {
   return (
     <div className="App">
       <div>
+        <Controller balance={balance}/>
+      </div>
+      <div>
       <button onClick={()=>resetEnv()} disabled={buttonState.resetDisabled}>
           Reset
         </button>
@@ -206,8 +214,11 @@ function App() {
         <button onClick={()=>revealHidden()} disabled={buttonState.standDisabled}>
           Stay
         </button>
-
+        <button onClick={()=>placeBet(10)} disabled={buttonState.standDisabled}>
+          Bet
+        </button>
       </div>
+
       <div>
         <Hand title={`Your Hand (${userCardScore})`} cards={userCards} />
         <Hand title={`Dealers Hand (${dealerCardScore})`} cards={dealerCards}/>
