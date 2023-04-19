@@ -5,26 +5,30 @@ import Card from "./components/Card";
 import Hand from './components/Hand';
 import Controller from './components/Controller';
 import jsonData from './deck.json';
+import {GameState} from "./components/types"
+import Status from './components/Status';
 
 function App() {
-
-  enum GameState {
-    bet,
-    init,
-    userTurn,
-    dealerTurn,
-    bust
+  enum Message {
+    bet = 'Place your Bet!',
+    hitStand = 'Hit or Stand?',
+    bust = 'Bust!',
+    userWin = 'You Win!',
+    dealerWin = 'Dealer Wins!',
+    tie = 'Tie!'
   }
 
   const [clickedButton, setClickedButton] = useState('');
   const [betAmount, setBetAmount] = useState(0);
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(100);
 
   const [userCards, setUserCards]: any[] = useState([]);
   const [userCardScore, setUserCardScore] = useState(0);
+  const [userCount, setUserCount] = useState(0);
 
   const [dealerCards, setDealerCards]: any[] = useState([]);
   const [dealerCardScore, setDealerCardScore] = useState(0);
+  const [dealerCount, setDealerCount] = useState(0);
 
   const data = JSON.parse(JSON.stringify(jsonData.cards));
   const [deck, setDeck]: any[] = useState(data);
@@ -33,15 +37,19 @@ function App() {
   const [buttonState, setButtonState] = useState({
     hitDisabled: false,
     standDisabled: false,
-    resetDisabled: false
+    resetDisabled: true
   });
+  const [message, setMessage] = useState(Message.bet);
+
 
   useEffect(() => {
     calculateScore(userCards, setUserCardScore);
+    setUserCount(userCount+1)
   }, [userCards]);
 
   useEffect(() => {
     calculateScore(dealerCards, setDealerCardScore);
+    setDealerCount(dealerCount+1)
   }, [dealerCards]);
 
   useEffect(() => {
@@ -58,31 +66,36 @@ function App() {
   useEffect(() => {
     if(gameState == GameState.userTurn){
       if(userCardScore > 21){
-        bust()
+        bust(gameState)
         console.log("you lost")
+      } else if (userCardScore == 21){
+        buttonState.hitDisabled = true;
+        setButtonState({ ...buttonState });
       }
     }
-  })
+  }, [userCount])
 
   useEffect(() => {
     if(gameState == GameState.dealerTurn){
-      if(dealerCardScore <= 21 && dealerCardScore > userCardScore){
-        console.log("user lost")
-        buttonState.hitDisabled = true;
-        buttonState.resetDisabled = false;
-        buttonState.standDisabled = true;
-        setButtonState({ ...buttonState });
-      }
-      else if (dealerCardScore < 17){
+      console.log("")
+      console.log(userCardScore)
+      console.log(dealerCardScore)
+      
+      if (dealerCardScore < 17) {
         getCard("dealer");
       } 
-      else if(dealerCardScore > 21){
-        console.log("user won")
-        setGameState(GameState.bust)
+      else if (userCardScore > dealerCardScore || dealerCardScore > 21){
+        win()
+      }
+      else if(dealerCardScore > userCardScore){
+        bust(gameState)
+      }
+      else {
+        tie()
       }
       buttonState.resetDisabled = false; 
     }
-  })
+  },[dealerCount])
 
   const calculateScore = (cards: any[], setScore: any) => {
     let total = 0;
@@ -124,20 +137,47 @@ function App() {
     }
       
   }
+  const tie = () => {
+    buttonState.hitDisabled = true;
+    buttonState.standDisabled = true;
+    buttonState.resetDisabled = false;
+    setBalance(balance + betAmount)
+    setButtonState({ ...buttonState });
+    setGameState(GameState.tie)
+    setMessage(Message.tie)
+  }
+  const win = () => {
+    buttonState.hitDisabled = true;
+    buttonState.standDisabled = true;
+    buttonState.resetDisabled = false;
+    setBalance(balance + betAmount*2)
+    setButtonState({ ...buttonState });
+    setGameState(GameState.win)
+    setMessage(Message.userWin)
+  }
 
-  const bust = () => {
+  const bust = (state: GameState) => {
     buttonState.hitDisabled = true;
     buttonState.standDisabled = true;
     buttonState.resetDisabled = false;
     setButtonState({ ...buttonState });
-    setGameState(GameState.bust)
+    setGameState(GameState.lost)
+
+    if(state == GameState.userTurn){
+      setMessage(Message.bust)
+    } else if (state == GameState.dealerTurn) {
+      setMessage(Message.dealerWin)
+    }
+    
   }
 
   const revealHidden = () => {
-    setGameState(GameState.dealerTurn)
+    buttonState.resetDisabled = false;
     buttonState.hitDisabled = true;
     buttonState.standDisabled = true;
+    
     setButtonState({ ...buttonState });
+    setGameState(GameState.dealerTurn)
     dealerCards.filter((card: any) => {
       if(card.hidden == true){
         card.hidden = false
@@ -145,6 +185,7 @@ function App() {
       return card
     });
     setDealerCards([...dealerCards])
+    
   }
 
   const hit = () => {
@@ -155,6 +196,9 @@ function App() {
   }
   const placeBet = (amount: number) => {
     setBetAmount(amount);
+    setGameState(GameState.init)
+    setMessage(Message.hitStand)
+    setBalance(balance - amount)
   }
 
   const getCard = (dealtype: string) => {
@@ -188,12 +232,13 @@ function App() {
     setUserCardScore(0);
     setDealerCards([]);
     setDealerCardScore(0);
+    setMessage(Message.bet)
 
     buttonState.hitDisabled = false;
     buttonState.resetDisabled = true;
     buttonState.standDisabled = false;
     setButtonState({ ...buttonState });
-    setGameState(GameState.init)
+    setGameState(GameState.bet)
     
     console.log(userCardScore)
   }
@@ -201,28 +246,10 @@ function App() {
   
   return (
     <div className="App">
-      <div>
-        <Controller balance={balance}/>
-      </div>
-      <div>
-      <button onClick={()=>resetEnv()} disabled={buttonState.resetDisabled}>
-          Reset
-        </button>
-        <button onClick={()=>hit()} disabled={buttonState.hitDisabled}>
-          Hit
-        </button>
-        <button onClick={()=>revealHidden()} disabled={buttonState.standDisabled}>
-          Stay
-        </button>
-        <button onClick={()=>placeBet(10)} disabled={buttonState.standDisabled}>
-          Bet
-        </button>
-      </div>
-
-      <div>
-        <Hand title={`Your Hand (${userCardScore})`} cards={userCards} />
+        <Status Message={message}/>
         <Hand title={`Dealers Hand (${dealerCardScore})`} cards={dealerCards}/>
-      </div>
+        <Hand title={`Your Hand (${userCardScore})`} cards={userCards} />
+        <Controller balance={balance} resetEnv={resetEnv} hit={hit} revealHidden={revealHidden} placeBet={placeBet} buttonState={buttonState} currentBet={betAmount} gameState={gameState}/>
     </div>
   );
 }
