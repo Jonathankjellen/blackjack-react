@@ -62,6 +62,7 @@ function App() {
       setGameState(GameState.userTurn)
     }
   })
+  
 
   useEffect(() => {
     if(gameState == GameState.userTurn){
