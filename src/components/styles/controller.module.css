@@ -12,7 +12,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #007bff;
+    background-color: #C79A3A;
     border-radius: 5px;
     padding: 10px;
   }
@@ -48,7 +48,7 @@
 }
 
 .button {
-    background-color: #007bff;
+    background-color: #C79A3A;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -60,10 +60,10 @@
 }
 
 .button:hover {
-    background-color: #0062cc;
+    background-color: #C79A3A;
 }
 
 button:disabled,
 button[disabled]{
-    background-color: #0e3661cc;
+    background-color: #C79A3A;
 }
